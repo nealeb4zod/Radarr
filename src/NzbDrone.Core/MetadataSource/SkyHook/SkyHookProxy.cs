@@ -202,7 +202,7 @@ namespace NzbDrone.Core.MetadataSource.SkyHook
             var certificationCountry = _configService.CertificationCountry.ToString();
 
             movie.Certification = resource.Certifications.FirstOrDefault(m => m.Country == certificationCountry)?.Certification;
-            movie.Ratings = resource.Ratings.Select(MapRatings).FirstOrDefault() ?? new Ratings();
+            movie.Ratings = MapRatings(resource.Ratings);
             movie.Genres = resource.Genres;
             movie.Recommendations = resource.Recommendations?.Select(r => r.TmdbId).ToList() ?? new List<int>();
 
@@ -512,18 +512,59 @@ namespace NzbDrone.Core.MetadataSource.SkyHook
             return newAlternativeTitle;
         }
 
-        private static Ratings MapRatings(RatingResource rating)
+        private static Ratings MapRatings(List<RatingResource> ratings)
         {
-            if (rating == null)
+            if (ratings == null)
             {
                 return new Ratings();
             }
 
-            return new Ratings
+            var mappedRatings = new Ratings();
+
+            foreach (var rating in ratings)
             {
-                Votes = rating.Count,
-                Value = rating.Value
-            };
+                if (rating.Origin.ToLower() == "tmdb")
+                {
+                    mappedRatings.Tmdb = new RatingChild
+                    {
+                        Type = (RatingType)Enum.Parse(typeof(RatingType), rating.Type),
+                        Value = rating.Value,
+                        Votes = rating.Count
+                    };
+                }
+
+                if (rating.Origin.ToLower() == "imdb")
+                {
+                    mappedRatings.Imdb = new RatingChild
+                    {
+                        Type = (RatingType)Enum.Parse(typeof(RatingType), rating.Type),
+                        Value = rating.Value,
+                        Votes = rating.Count
+                    };
+                }
+
+                if (rating.Origin.ToLower() == "metacritic")
+                {
+                    mappedRatings.MetaCritic = new RatingChild
+                    {
+                        Type = (RatingType)Enum.Parse(typeof(RatingType), rating.Type),
+                        Value = rating.Value,
+                        Votes = rating.Count
+                    };
+                }
+
+                if (rating.Origin.ToLower() == "rottentomatoes")
+                {
+                    mappedRatings.RottenTomatoes = new RatingChild
+                    {
+                        Type = (RatingType)Enum.Parse(typeof(RatingType), rating.Type),
+                        Value = rating.Value,
+                        Votes = rating.Count
+                    };
+                }
+            }
+
+            return mappedRatings;
         }
 
         private static MediaCover.MediaCover MapImage(ImageResource arg)

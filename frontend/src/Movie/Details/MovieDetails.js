@@ -452,9 +452,9 @@ class MovieDetails extends Component {
                       !!ratings &&
                         <span className={styles.rating}>
                           <HeartRating
-                            rating={ratings.value}
+                            ratings={ratings}
                             iconSize={20}
-                            hideHeart={isSmallScreen}
+                            hideIcon={isSmallScreen}
                           />
                         </span>
                     }
